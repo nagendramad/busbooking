@@ -596,6 +596,46 @@
             font-weight: 600;
         }
 
+        #authContent input {
+            display: block;
+            width: 100%;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: var(--gray-50);
+            color: var(--gray-800);
+        }
+
+        #authContent input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        #authContent .btn-primary {
+            width: 100%;
+            margin-bottom: 0.75rem;
+        }
+
+        #authContent .secondary-btn {
+            width: 100%;
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #authContent .secondary-btn:hover {
+            background: var(--gray-300);
+        }
+
         .seat-layout {
             margin: 1.5rem 0;
         }
@@ -744,9 +784,9 @@
                 <span>Smart Travel</span>
             </a>
             <nav class="nav-links">
-                <a href="/">Home</a>
-                <a href="/login">Login</a>
-                <a href="/register" class="btn-nav">Register</a>
+                <a href="/" onclick="closeAuth()">Home</a>
+                <a href="javascript:void(0)" onclick="openAuth('login')">Login</a>
+                <a href="javascript:void(0)" class="btn-nav" onclick="openAuth('register')">Register</a>
                 <a href="/operator" class="btn-nav" style="background: var(--secondary);">Operator</a>
             </nav>
         </div>
@@ -814,7 +854,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3006/api';
+        const API_BASE = 'http://localhost:3007/api';
 
         const cities = [
             'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur',
@@ -1246,5 +1286,199 @@
             }
         }
     </script>
-</body>
+
+    <div class="seat-selection-overlay" id="authOverlay">
+        <div class="seat-selection-panel" id="authPanel">
+            <button class="close-btn" onclick="closeAuth()">Close</button>
+            <div id="authContent"></div>
+        </div>
+    </div>
+
+    <script>
+        function openAuth(type) {
+            const overlay = document.getElementById('authOverlay');
+            const content = document.getElementById('authContent');
+            overlay.classList.add('open');
+
+            if (type === 'login') {
+                content.innerHTML = `
+                    <h2>Login</h2>
+                    <div id="loginForm">
+                        <p class="otp-info">Enter your mobile number to receive OTP</p>
+                        <input type="tel" id="loginPhone" placeholder="Mobile Number" required />
+                        <button class="btn-primary" onclick="sendLoginOtp()" id="loginSendBtn">Send OTP</button>
+                    </div>
+                    <div id="loginOtpForm" style="display: none;">
+                        <p class="otp-info">Enter the OTP sent to <span id="loginPhoneDisplay"></span></p>
+                        <input type="text" id="loginOtp" placeholder="Enter OTP" maxlength="6" required />
+                        <button class="btn-primary" onclick="verifyLoginOtp()" id="loginVerifyBtn">Verify OTP</button>
+                        <button class="secondary-btn" onclick="showLoginStep(1)">Change Number</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 1rem; color: var(--gray-600);">
+                        Don't have an account? <a href="/register" onclick="event.preventDefault(); openAuth('register');">Register</a>
+                    </p>
+                `;
+            } else {
+                content.innerHTML = `
+                    <h2>Register</h2>
+                    <div id="registerForm">
+                        <input type="text" id="regName" placeholder="Full Name" required />
+                        <input type="tel" id="regPhone" placeholder="Mobile Number" required />
+                        <button class="btn-primary" onclick="sendRegisterOtp()" id="regSendBtn">Send OTP</button>
+                    </div>
+                    <div id="registerOtpForm" style="display: none;">
+                        <p class="otp-info">Enter the OTP sent to <span id="regPhoneDisplay"></span></p>
+                        <input type="text" id="regOtp" placeholder="Enter OTP" maxlength="6" required />
+                        <button class="btn-primary" onclick="verifyRegisterOtp()" id="regVerifyBtn">Verify OTP</button>
+                        <button class="secondary-btn" onclick="showRegisterStep(1)">Change Number</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 1rem; color: var(--gray-600);">
+                        Already have an account? <a href="/login" onclick="event.preventDefault(); openAuth('login');">Login</a>
+                    </p>
+                `;
+            }
+        }
+
+        function closeAuth() {
+            document.getElementById('authOverlay').classList.remove('open');
+        }
+
+        function showLoginStep(step) {
+            document.getElementById('loginForm').style.display = step === 1 ? 'block' : 'none';
+            document.getElementById('loginOtpForm').style.display = step === 2 ? 'block' : 'none';
+        }
+
+        function showRegisterStep(step) {
+            document.getElementById('registerForm').style.display = step === 1 ? 'block' : 'none';
+            document.getElementById('registerOtpForm').style.display = step === 2 ? 'block' : 'none';
+        }
+
+        async function sendLoginOtp() {
+            const phone = document.getElementById('loginPhone').value;
+            const btn = document.getElementById('loginSendBtn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Failed to send OTP');
+                    btn.disabled = false;
+                    btn.textContent = 'Send OTP';
+                    return;
+                }
+
+                document.getElementById('loginPhoneDisplay').textContent = phone;
+                showLoginStep(2);
+            } catch (err) {
+                alert('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        async function verifyLoginOtp() {
+            const phone = document.getElementById('loginPhone').value;
+            const otp = document.getElementById('loginOtp').value;
+            const btn = document.getElementById('loginVerifyBtn');
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, otp })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Invalid OTP');
+                    btn.disabled = false;
+                    btn.textContent = 'Verify OTP';
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+                closeAuth();
+                window.location.reload();
+            } catch (err) {
+                alert('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+
+        async function sendRegisterOtp() {
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const btn = document.getElementById('regSendBtn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                const res = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Failed to send OTP');
+                    btn.disabled = false;
+                    btn.textContent = 'Send OTP';
+                    return;
+                }
+
+                document.getElementById('regPhoneDisplay').textContent = phone;
+                showRegisterStep(2);
+            } catch (err) {
+                alert('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Send OTP';
+            }
+        }
+
+        async function verifyRegisterOtp() {
+            const name = document.getElementById('regName').value;
+            const phone = document.getElementById('regPhone').value;
+            const otp = document.getElementById('regOtp').value;
+            const btn = document.getElementById('regVerifyBtn');
+            btn.disabled = true;
+            btn.textContent = 'Verifying...';
+
+            try {
+                const res = await fetch('/api/auth/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, otp })
+                });
+
+                const data = await res.json();
+                if (!res.ok) {
+                    alert(data.message || 'Invalid OTP');
+                    btn.disabled = false;
+                    btn.textContent = 'Verify OTP';
+                    return;
+                }
+
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify({ name, phone }));
+                closeAuth();
+                window.location.reload();
+            } catch (err) {
+                alert('Something went wrong. Please try again.');
+                btn.disabled = false;
+                btn.textContent = 'Verify OTP';
+            }
+        }
+    </script>
 </html>

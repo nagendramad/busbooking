@@ -28,7 +28,8 @@ const mockData = {
   trips: [],
   bookings: [],
   payments: [],
-  notifications: []
+  notifications: [],
+  otps: []
 };
 
 // Operator in-memory data
@@ -176,21 +177,78 @@ const operatorData = {
 const authRoutes = express.Router();
 
 authRoutes.post('/register', (req, res) => {
-  const { name, phone, email } = req.body;
+  const { name, phone } = req.body;
+
+  if (!name || !phone) {
+    return res.status(400).json({ message: 'Name and phone number are required' });
+  }
+
+  const existingUser = mockData.users.find(u => u.phone === phone);
+  if (existingUser) {
+    return res.status(400).json({ message: 'Phone number already registered' });
+  }
+
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  console.log(`OTP sent: ${otp}`);
-  res.status(201).json({ message: 'Registration successful. Please verify OTP.', otp });
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  mockData.otps.push({ phone, otp, expiresAt, type: 'register' });
+  mockData.users.push({ name, phone, isVerified: false });
+
+  console.log(`Registration OTP for ${phone}: ${otp}`);
+  res.status(201).json({ message: 'OTP sent to your mobile number', phone });
 });
 
 authRoutes.post('/login', (req, res) => {
-  const { phone, password } = req.body;
-  const mockToken = 'mock_token_' + Date.now();
-  res.json({ token: mockToken, userType: 'customer', userId: 'user123' });
+  const { phone } = req.body;
+
+  if (!phone) {
+    return res.status(400).json({ message: 'Phone number is required' });
+  }
+
+  const user = mockData.users.find(u => u.phone === phone);
+  if (!user) {
+    return res.status(404).json({ message: 'Phone number not registered' });
+  }
+
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+  mockData.otps.push({ phone, otp, expiresAt, type: 'login' });
+
+  console.log(`Login OTP for ${phone}: ${otp}`);
+  res.json({ message: 'OTP sent to your mobile number', phone });
 });
 
 authRoutes.post('/verify-otp', (req, res) => {
+  const { phone, otp } = req.body;
+
+  if (!phone || !otp) {
+    return res.status(400).json({ message: 'Phone number and OTP are required' });
+  }
+
+  const otpRecord = mockData.otps.find(o => o.phone === phone && o.otp === otp);
+  if (!otpRecord) {
+    return res.status(400).json({ message: 'Invalid OTP' });
+  }
+
+  if (new Date() > new Date(otpRecord.expiresAt)) {
+    return res.status(400).json({ message: 'OTP expired' });
+  }
+
+  const user = mockData.users.find(u => u.phone === phone);
+  if (user) {
+    user.isVerified = true;
+  }
+
+  mockData.otps = mockData.otps.filter(o => !(o.phone === phone && o.otp === otp));
+
   const mockToken = 'mock_token_' + Date.now();
-  res.json({ message: 'Verification successful', token: mockToken, userType: 'customer' });
+  res.json({
+    message: 'Verification successful',
+    token: mockToken,
+    userType: 'customer',
+    user: user ? { name: user.name, phone: user.phone } : { phone }
+  });
 });
 
 app.use('/api/auth', authRoutes);
@@ -512,7 +570,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3006;
+const PORT = process.env.PORT || 3007;
 
 if (require.main === module) {
   app.listen(PORT, () => {

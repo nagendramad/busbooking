@@ -854,7 +854,7 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3007/api';
+        const API_BASE = 'http://localhost:3008/api';
 
         const cities = [
             'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur',
@@ -1313,6 +1313,7 @@
                     </div>
                     <div id="loginOtpForm" style="display: none;">
                         <p class="otp-info">Enter the OTP sent to <span id="loginPhoneDisplay"></span></p>
+                        <div id="loginOtpDisplay" style="display: none; background: #d1fae5; color: #065f46; padding: 0.75rem; border-radius: 10px; margin-bottom: 1rem; text-align: center; font-weight: 700;"></div>
                         <input type="text" id="loginOtp" placeholder="Enter OTP" maxlength="6" required />
                         <button class="btn-primary" onclick="verifyLoginOtp()" id="loginVerifyBtn">Verify OTP</button>
                         <button class="secondary-btn" onclick="showLoginStep(1)">Change Number</button>
@@ -1335,6 +1336,7 @@
                     </div>
                     <div id="registerOtpForm" style="display: none;">
                         <p class="otp-info">Enter the OTP sent to <span id="regPhoneDisplay"></span></p>
+                        <div id="regOtpDisplay" style="display: none; background: #d1fae5; color: #065f46; padding: 0.75rem; border-radius: 10px; margin-bottom: 1rem; text-align: center; font-weight: 700;"></div>
                         <input type="text" id="regOtp" placeholder="Enter OTP" maxlength="6" required />
                         <button class="btn-primary" onclick="verifyRegisterOtp()" id="regVerifyBtn">Verify OTP</button>
                         <button class="secondary-btn" onclick="showRegisterStep(1)">Change Number</button>
@@ -1365,7 +1367,9 @@
             const phone = document.getElementById('loginPhone').value;
             const btn = document.getElementById('loginSendBtn');
             const errorEl = document.getElementById('loginError');
+            const otpDisplay = document.getElementById('loginOtpDisplay');
             errorEl.style.display = 'none';
+            if (otpDisplay) otpDisplay.style.display = 'none';
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
@@ -1391,6 +1395,10 @@
                 }
 
                 document.getElementById('loginPhoneDisplay').textContent = phone;
+                if (data.otp && otpDisplay) {
+                    otpDisplay.textContent = 'Demo OTP: ' + data.otp;
+                    otpDisplay.style.display = 'block';
+                }
                 showLoginStep(2);
             } catch (err) {
                 errorEl.textContent = 'Something went wrong. Please try again.';
@@ -1443,7 +1451,9 @@
             const phone = document.getElementById('regPhone').value;
             const btn = document.getElementById('regSendBtn');
             const errorEl = document.getElementById('registerError');
+            const otpDisplay = document.getElementById('regOtpDisplay');
             errorEl.style.display = 'none';
+            if (otpDisplay) otpDisplay.style.display = 'none';
 
             btn.disabled = true;
             btn.textContent = 'Sending...';
@@ -1465,6 +1475,10 @@
                 }
 
                 document.getElementById('regPhoneDisplay').textContent = phone;
+                if (data.otp && otpDisplay) {
+                    otpDisplay.textContent = 'Demo OTP: ' + data.otp;
+                    otpDisplay.style.display = 'block';
+                }
                 showRegisterStep(2);
             } catch (err) {
                 errorEl.textContent = 'Something went wrong. Please try again.';

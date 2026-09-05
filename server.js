@@ -195,7 +195,7 @@ authRoutes.post('/register', (req, res) => {
   mockData.users.push({ name, phone, isVerified: false });
 
   console.log(`Registration OTP for ${phone}: ${otp}`);
-  res.status(201).json({ message: 'OTP sent to your mobile number', phone });
+  res.status(201).json({ message: 'OTP sent to your mobile number', phone, otp });
 });
 
 authRoutes.post('/login', (req, res) => {
@@ -216,7 +216,7 @@ authRoutes.post('/login', (req, res) => {
   mockData.otps.push({ phone, otp, expiresAt, type: 'login' });
 
   console.log(`Login OTP for ${phone}: ${otp}`);
-  res.json({ message: 'OTP sent to your mobile number', phone });
+  res.json({ message: 'OTP sent to your mobile number', phone, otp });
 });
 
 authRoutes.post('/verify-otp', (req, res) => {
@@ -570,7 +570,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3007;
+const PORT = process.env.PORT || 3008;
 
 if (require.main === module) {
   app.listen(PORT, () => {

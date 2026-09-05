@@ -436,9 +436,9 @@
         </div>
 
         <div class="tabs">
-            <button class="tab active" onclick="showSection('buses')">Buses</button>
-            <button class="tab" onclick="showSection('routes')">Routes</button>
-            <button class="tab" onclick="showSection('trips')">Trips / Schedules</button>
+            <button class="tab active" onclick="showSection('buses', this)">Buses</button>
+            <button class="tab" onclick="showSection('routes', this)">Routes</button>
+            <button class="tab" onclick="showSection('trips', this)">Trips / Schedules</button>
         </div>
 
         <!-- Buses Section -->
@@ -681,11 +681,11 @@
             }
         }
 
-        function showSection(section) {
+        function showSection(section, tabElement) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.getElementById(section + 'Section').classList.add('active');
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            event.target.classList.add('active');
+            if (tabElement) tabElement.classList.add('active');
 
             if (section === 'buses') loadBuses();
             if (section === 'routes') loadRoutes();
@@ -693,21 +693,27 @@
         }
 
         async function loadBuses() {
-            const res = await fetch(`${API_BASE}/buses`);
-            const buses = await res.json();
-            document.getElementById('busesTable').innerHTML = buses.map(bus => `
-                <tr>
-                    <td>${bus.busName}</td>
-                    <td><span class="badge badge-success">${bus.busType}</span></td>
-                    <td>${bus.capacity}</td>
-                    <td>${(bus.amenities || []).join(', ') || 'None'}</td>
-                    <td>${bus.seatLayout ? `${bus.seatLayout.rows} rows × ${bus.seatLayout.columns.length} cols` : 'Default'}</td>
-                    <td><span class="badge ${bus.isActive ? 'badge-success' : 'badge-danger'}">${bus.isActive ? 'Active' : 'Inactive'}</span></td>
-                    <td class="actions">
-                        <button class="btn btn-danger" onclick="deleteBus('${bus._id}')">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const res = await fetch(`${API_BASE}/buses`);
+                if (!res.ok) throw new Error('Failed to fetch buses');
+                const buses = await res.json();
+                document.getElementById('busesTable').innerHTML = buses.map(bus => `
+                    <tr>
+                        <td>${bus.busName}</td>
+                        <td><span class="badge badge-success">${bus.busType}</span></td>
+                        <td>${bus.capacity}</td>
+                        <td>${(bus.amenities || []).join(', ') || 'None'}</td>
+                        <td>${bus.seatLayout ? `${bus.seatLayout.rows} rows × ${bus.seatLayout.columns.length} cols` : 'Default'}</td>
+                        <td><span class="badge ${bus.isActive ? 'badge-success' : 'badge-danger'}">${bus.isActive ? 'Active' : 'Inactive'}</span></td>
+                        <td class="actions">
+                            <button class="btn btn-danger" onclick="deleteBus('${bus._id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load buses:', err);
+                document.getElementById('busesTable').innerHTML = `<tr><td colspan="6" style="color: var(--danger);">Failed to load buses: ${err.message}</td></tr>`;
+            }
         }
 
         async function addBus(e) {
@@ -725,40 +731,66 @@
                 seatLayout
             };
 
-            await fetch(`${API_BASE}/buses`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(bus)
-            });
+            try {
+                const res = await fetch(`${API_BASE}/buses`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bus)
+                });
 
-            e.target.reset();
-            document.getElementById('seatLayoutPreview').innerHTML = '';
-            loadBuses();
-            loadDashboard();
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert('Failed to add bus: ' + err.message);
+                    return;
+                }
+
+                e.target.reset();
+                document.getElementById('seatLayoutPreview').innerHTML = '';
+                await loadBuses();
+                await loadDashboard();
+                alert('Bus added successfully');
+            } catch (err) {
+                alert('Failed to add bus: ' + err.message);
+            }
         }
 
         async function deleteBus(id) {
             if (!confirm('Delete this bus?')) return;
-            await fetch(`${API_BASE}/buses/${id}`, { method: 'DELETE' });
-            loadBuses();
-            loadDashboard();
+            try {
+                const res = await fetch(`${API_BASE}/buses/${id}`, { method: 'DELETE' });
+                if (!res.ok) {
+                    const err = await res.json();
+                    alert('Failed to delete bus: ' + err.message);
+                    return;
+                }
+                await loadBuses();
+                await loadDashboard();
+            } catch (err) {
+                alert('Failed to delete bus: ' + err.message);
+            }
         }
 
         async function loadRoutes() {
-            const res = await fetch(`${API_BASE}/routes`);
-            const routes = await res.json();
-            document.getElementById('routesTable').innerHTML = routes.map(route => `
-                <tr>
-                    <td>${route.source}</td>
-                    <td>${route.destination}</td>
-                    <td>${route.distance} km</td>
-                    <td>${route.estimatedDuration} hrs</td>
-                    <td>${(route.stops || []).map(s => `${s.location} (${s.time})`).join(', ') || 'None'}</td>
-                    <td class="actions">
-                        <button class="btn btn-danger" onclick="deleteRoute('${route._id}')">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
+            try {
+                const res = await fetch(`${API_BASE}/routes`);
+                if (!res.ok) throw new Error('Failed to fetch routes');
+                const routes = await res.json();
+                document.getElementById('routesTable').innerHTML = routes.map(route => `
+                    <tr>
+                        <td>${route.source}</td>
+                        <td>${route.destination}</td>
+                        <td>${route.distance} km</td>
+                        <td>${route.estimatedDuration} hrs</td>
+                        <td>${(route.stops || []).map(s => `${s.location} (${s.time})`).join(', ') || 'None'}</td>
+                        <td class="actions">
+                            <button class="btn btn-danger" onclick="deleteRoute('${route._id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load routes:', err);
+                document.getElementById('routesTable').innerHTML = `<tr><td colspan="6" style="color: var(--danger);">Failed to load routes: ${err.message}</td></tr>`;
+            }
         }
 
         async function addRoute(e) {
@@ -796,33 +828,38 @@
         }
 
         async function loadTrips() {
-            const [tripsRes, busesRes, routesRes] = await Promise.all([
-                fetch(`${API_BASE}/trips`),
-                fetch(`${API_BASE}/buses`),
-                fetch(`${API_BASE}/routes`)
-            ]);
+            try {
+                const [tripsRes, busesRes, routesRes] = await Promise.all([
+                    fetch(`${API_BASE}/trips`),
+                    fetch(`${API_BASE}/buses`),
+                    fetch(`${API_BASE}/routes`)
+                ]);
 
-            const trips = await tripsRes.json();
-            const buses = await busesRes.json();
-            const routes = await routesRes.json();
+                const trips = await tripsRes.json();
+                const buses = await busesRes.json();
+                const routes = await routesRes.json();
 
-            document.getElementById('tripBus').innerHTML = buses.map(b => `<option value="${b._id}">${b.busName}</option>`).join('');
-            document.getElementById('tripRoute').innerHTML = routes.map(r => `<option value="${r._id}">${r.source} → ${r.destination}</option>`).join('');
+                document.getElementById('tripBus').innerHTML = buses.map(b => `<option value="${b._id}">${b.busName}</option>`).join('');
+                document.getElementById('tripRoute').innerHTML = routes.map(r => `<option value="${r._id}">${r.source} → ${r.destination}</option>`).join('');
 
-            document.getElementById('tripsTable').innerHTML = trips.map(trip => `
-                <tr>
-                    <td>${trip.bus?.busName || trip.busId}</td>
-                    <td>${trip.route ? `${trip.route.source} → ${trip.route.destination}` : trip.routeId}</td>
-                    <td>${new Date(trip.departureTime).toLocaleString('en-IN')}</td>
-                    <td>${new Date(trip.arrivalTime).toLocaleString('en-IN')}</td>
-                    <td>₹${trip.price}</td>
-                    <td>${trip.availableSeats}</td>
-                    <td>${(trip.days || []).join(', ') || 'Not set'}</td>
-                    <td class="actions">
-                        <button class="btn btn-danger" onclick="deleteTrip('${trip._id}')">Delete</button>
-                    </td>
-                </tr>
-            `).join('');
+                document.getElementById('tripsTable').innerHTML = trips.map(trip => `
+                    <tr>
+                        <td>${trip.bus?.busName || trip.busId}</td>
+                        <td>${trip.route ? `${trip.route.source} → ${trip.route.destination}` : trip.routeId}</td>
+                        <td>${new Date(trip.departureTime).toLocaleString('en-IN')}</td>
+                        <td>${new Date(trip.arrivalTime).toLocaleString('en-IN')}</td>
+                        <td>₹${trip.price}</td>
+                        <td>${trip.availableSeats}</td>
+                        <td>${(trip.days || []).join(', ') || 'Not set'}</td>
+                        <td class="actions">
+                            <button class="btn btn-danger" onclick="deleteTrip('${trip._id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('Failed to load trips:', err);
+                document.getElementById('tripsTable').innerHTML = `<tr><td colspan="8" style="color: var(--danger);">Failed to load trips: ${err.message}</td></tr>`;
+            }
         }
 
         async function addTrip(e) {

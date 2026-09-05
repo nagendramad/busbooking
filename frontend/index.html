@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Travel Bus Booking</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #dbeafe;
+            --secondary: #10b981;
+            --secondary-dark: #059669;
+            --accent: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: var(--gray-800);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.5rem;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--gray-600);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .btn-nav {
+            background: var(--primary);
+            color: white;
+            padding: 0.5rem 1.25rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+        }
+
+        .btn-nav:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            opacity: 0.95;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            margin-bottom: 2rem;
+            border: 1px solid var(--gray-200);
+        }
+
+        .search-section h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 0.75rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.2s;
+            background: var(--gray-50);
+            color: var(--gray-800);
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+            white-space: nowrap;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 2rem;
+        }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .results-header h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .results-count {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .bus-card {
+            background: white;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--gray-200);
+            transition: all 0.3s ease;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1.5rem;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .bus-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .bus-info h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .bus-type-badge {
+            display: inline-block;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .bus-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .bus-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .bus-detail-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-500);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .bus-detail-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+
+        .bus-detail-value.price {
+            color: var(--secondary-dark);
+            font-size: 1.25rem;
+        }
+
+        .bus-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            align-items: flex-end;
+        }
+
+        .btn-book {
+            background: linear-gradient(135deg, var(--secondary), var(--secondary-dark));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+            white-space: nowrap;
+        }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .seats-available {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .seats-available.low {
+            background: #fef2f2;
+            color: var(--danger);
+        }
+
+        .ticket-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            border: 1px solid var(--gray-200);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .ticket-header {
+            text-align: center;
+            padding-bottom: 1.5rem;
+            border-bottom: 2px dashed var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        .ticket-header h2 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .ticket-header p {
+            color: var(--gray-500);
+            font-size: 0.95rem;
+        }
+
+        .ticket-body {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .ticket-route {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-800);
+        }
+
+        .ticket-route .arrow {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .ticket-info {
+            background: var(--gray-50);
+            padding: 1rem;
+            border-radius: 10px;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .ticket-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .ticket-info-label {
+            font-weight: 600;
+            color: var(--gray-600);
+        }
+
+        .ticket-info-value {
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+
+        .ticket-qr {
+            text-align: center;
+            padding: 1.5rem;
+            background: var(--gray-50);
+            border-radius: 10px;
+            margin-top: 1rem;
+        }
+
+        .ticket-qr img {
+            width: 150px;
+            height: 150px;
+            border-radius: 8px;
+            border: 2px solid var(--gray-200);
+        }
+
+        .ticket-amount {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary-dark);
+            margin-top: 1rem;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem;
+            color: white;
+            font-size: 1.1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: white;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.8;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            opacity: 0.9;
+        }
+
+        .autocomplete-wrapper {
+            position: relative;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 2px solid var(--gray-200);
+            border-radius: 10px;
+            margin-top: 0.25rem;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .suggestion-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: background 0.15s;
+            border-bottom: 1px solid var(--gray-100);
+            font-weight: 500;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.active {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .seat-selection-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 1rem;
+        }
+
+        .seat-selection-overlay.open {
+            display: flex;
+        }
+
+        .seat-selection-panel {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .seat-selection-panel h2 {
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+            font-weight: 800;
+        }
+
+        .seat-selection-panel .close-btn {
+            float: right;
+            background: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .seat-layout {
+            margin: 1.5rem 0;
+        }
+
+        .seat-layout h3 {
+            text-align: center;
+            margin: 1rem 0 0.5rem;
+            color: var(--gray-700);
+            font-weight: 700;
+        }
+
+        .seats-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.75rem;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .seat {
+            aspect-ratio: 1;
+            border: 2px solid var(--primary);
+            background: white;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            transition: all 0.2s;
+            font-size: 0.875rem;
+        }
+
+        .seat:hover:not(:disabled) {
+            background: var(--primary-light);
+            transform: scale(1.05);
+        }
+
+        .seat.selected {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+
+        .seat.unavailable {
+            background: var(--gray-200);
+            color: var(--gray-400);
+            border-color: var(--gray-300);
+            cursor: not-allowed;
+        }
+
+        .passenger-form {
+            margin-top: 1.5rem;
+        }
+
+        .passenger-form h3 {
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+            font-weight: 700;
+        }
+
+        .passenger-card {
+            background: var(--gray-50);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 10px;
+            border: 1px solid var(--gray-200);
+        }
+
+        .passenger-card h4 {
+            margin-bottom: 0.75rem;
+            color: var(--gray-700);
+            font-weight: 600;
+        }
+
+        .passenger-card input,
+        .passenger-card select {
+            display: block;
+            width: 100%;
+            margin: 0.5rem 0;
+            padding: 0.75rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+            color: var(--gray-800);
+        }
+
+        .passenger-card input:focus,
+        .passenger-card select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        .seat-summary {
+            background: var(--gray-50);
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            border: 1px solid var(--gray-200);
+        }
+
+        .seat-summary p {
+            margin: 0.25rem 0;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .seat-summary .total {
+            color: var(--secondary-dark);
+            font-size: 1.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .bus-card {
+                margin: 1rem;
+            }
+
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .ticket {
+                margin: 1rem;
+            }
+
+            .login-page,
+            .register-page {
+                margin: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">🚌</div>
+                <span>Smart Travel</span>
+            </a>
+            <nav class="nav-links">
+                <a href="/">Home</a>
+                <a href="/login">Login</a>
+                <a href="/register" class="btn-nav">Register</a>
+                <a href="/operator" class="btn-nav" style="background: var(--secondary);">Operator</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Book Your Bus Journey</h1>
+            <p>Search, compare, and book bus tickets with ease. Safe, comfortable, and affordable travel.</p>
+        </section>
+
+        <section class="search-section">
+            <h2>🔍 Search Buses</h2>
+            <form onsubmit="handleSearch(event)" class="search-form">
+                <div class="form-group autocomplete-wrapper">
+                    <label for="source">From</label>
+                    <input
+                        type="text"
+                        id="source"
+                        placeholder="Enter source city"
+                        autocomplete="off"
+                        required
+                    />
+                    <div class="autocomplete-suggestions" id="sourceSuggestions"></div>
+                </div>
+                <div class="form-group autocomplete-wrapper">
+                    <label for="destination">To</label>
+                    <input
+                        type="text"
+                        id="destination"
+                        placeholder="Enter destination city"
+                        autocomplete="off"
+                        required
+                    />
+                    <div class="autocomplete-suggestions" id="destinationSuggestions"></div>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date</label>
+                    <input
+                        type="date"
+                        id="date"
+                        required
+                    />
+                </div>
+                <button type="submit" class="btn-primary" id="searchBtn">
+                    Search Buses
+                </button>
+            </form>
+        </section>
+
+        <section class="results-section" id="results" style="display: none;">
+            <div class="results-header">
+                <h2>Available Buses</h2>
+                <span class="results-count" id="resultsCount">0 found</span>
+            </div>
+            <div id="buses-list"></div>
+        </section>
+    </div>
+
+    <div class="seat-selection-overlay" id="seatOverlay">
+        <div class="seat-selection-panel">
+            <button class="close-btn" onclick="closeSeatSelection()">Close</button>
+            <div id="seatSelectionContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3006/api';
+
+        const cities = [
+            'Mumbai', 'Delhi', 'Bangalore', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Jaipur',
+            'Ahmedabad', 'Surat', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Thane', 'Bhopal',
+            'Visakhapatnam', 'Patna', 'Vadodara', 'Ludhiana', 'Agra', 'Nashik', 'Faridabad',
+            'Meerut', 'Rajkot', 'Varanasi', 'Srinagar', 'Aurangabad', 'Noida', 'Coimbatore'
+        ];
+
+        let selectedBus = null;
+        let selectedSeats = [];
+        let passengers = [];
+
+        document.getElementById('date').valueAsDate = new Date();
+
+        function setupAutocomplete(inputId, suggestionsId) {
+            const input = document.getElementById(inputId);
+            const suggestions = document.getElementById(suggestionsId);
+
+            input.addEventListener('input', () => {
+                const value = input.value.toLowerCase();
+                suggestions.innerHTML = '';
+
+                if (!value) {
+                    suggestions.style.display = 'none';
+                    return;
+                }
+
+                const matches = cities.filter(city => city.toLowerCase().includes(value)).slice(0, 5);
+
+                if (matches.length > 0) {
+                    suggestions.innerHTML = matches.map(city => `
+                        <div class="suggestion-item" onclick="selectCity('${inputId}', '${city}')">${city}</div>
+                    `).join('');
+                    suggestions.style.display = 'block';
+                } else {
+                    suggestions.style.display = 'none';
+                }
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => { suggestions.style.display = 'none'; }, 150);
+            });
+        }
+
+        function selectCity(inputId, city) {
+            document.getElementById(inputId).value = city;
+            document.getElementById(inputId === 'source' ? 'sourceSuggestions' : 'destinationSuggestions').style.display = 'none';
+        }
+
+        setupAutocomplete('source', 'sourceSuggestions');
+        setupAutocomplete('destination', 'destinationSuggestions');
+
+        async function handleSearch(e) {
+            e.preventDefault();
+            const searchBtn = document.getElementById('searchBtn');
+            const resultsSection = document.getElementById('results');
+            const busesList = document.getElementById('buses-list');
+            const resultsCount = document.getElementById('resultsCount');
+
+            const source = document.getElementById('source').value;
+            const destination = document.getElementById('destination').value;
+            const date = document.getElementById('date').value;
+
+            searchBtn.disabled = true;
+            searchBtn.textContent = 'Searching...';
+            resultsSection.style.display = 'block';
+
+            try {
+                const res = await fetch(`${API_BASE}/booking/buses?source=${source}&destination=${destination}&date=${date}`);
+                if (!res.ok) throw new Error('Failed to fetch buses');
+                const buses = await res.json();
+
+                resultsCount.textContent = `${buses.length} found`;
+
+                if (buses.length === 0) {
+                    busesList.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <h3>No buses found</h3>
+                            <p>Try adjusting your search criteria</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                busesList.innerHTML = buses.map(bus => {
+                    const departure = new Date(bus.departureTime);
+                    const arrival = new Date(bus.arrivalTime);
+                    const duration = Math.round((arrival - departure) / (1000 * 60 * 60));
+                    const seatsAvailable = bus.availableSeats || 0;
+                    const seatClass = seatsAvailable < 10 ? 'low' : '';
+
+                    return `
+                        <div class="bus-card" onclick="openSeatSelection('${bus._id}')">
+                            <div class="bus-info">
+                                <h3>
+                                    ${bus.busId?.busName || 'Bus'}
+                                    <span class="bus-type-badge">${bus.busId?.busType || 'N/A'}</span>
+                                </h3>
+                                <div class="bus-details">
+                                    <div class="bus-detail">
+                                        <span class="bus-detail-label">Departure</span>
+                                        <span class="bus-detail-value">${departure.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                        <span class="bus-detail-value">${departure.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <div class="bus-detail">
+                                        <span class="bus-detail-label">Arrival</span>
+                                        <span class="bus-detail-value">${arrival.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                                        <span class="bus-detail-value">${arrival.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                    <div class="bus-detail">
+                                        <span class="bus-detail-label">Duration</span>
+                                        <span class="bus-detail-value">${duration} hrs</span>
+                                    </div>
+                                    <div class="bus-detail">
+                                        <span class="bus-detail-label">Price per seat</span>
+                                        <span class="bus-detail-value price">₹${bus.price}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bus-actions" onclick="event.stopPropagation()">
+                                <div class="seats-available ${seatClass}">
+                                    ${seatsAvailable} seats left
+                                </div>
+                                <button class="btn-book" onclick="event.stopPropagation(); openSeatSelection('${bus._id}')">
+                                    Select Seats
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (err) {
+                busesList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>Error searching buses</h3>
+                        <p>${err.message}</p>
+                    </div>
+                `;
+            } finally {
+                searchBtn.disabled = false;
+                searchBtn.textContent = 'Search Buses';
+            }
+        }
+
+        async function openSeatSelection(tripId) {
+            selectedBus = { _id: tripId };
+            selectedSeats = [];
+            passengers = [];
+
+            try {
+                const res = await fetch(`${API_BASE}/booking/buses?source=&destination=&date=`);
+                const buses = await res.json();
+                const bus = buses.find(b => b._id === tripId);
+                if (!bus) throw new Error('Bus not found');
+                renderSeatSelection(bus);
+                document.getElementById('seatOverlay').classList.add('open');
+            } catch (err) {
+                alert('Failed to load bus details: ' + err.message);
+            }
+        }
+
+        function closeSeatSelection() {
+            document.getElementById('seatOverlay').classList.remove('open');
+            selectedBus = null;
+            selectedSeats = [];
+            passengers = [];
+        }
+
+        function renderSeatSelection(bus) {
+            const content = document.getElementById('seatSelectionContent');
+            const seatLayout = bus.seatLayout || {};
+            const layoutRows = seatLayout.layout || [];
+            const busType = bus.busType || 'seater';
+
+            let seatsHtml = '';
+            if (layoutRows.length > 0) {
+                seatsHtml = layoutRows.map(row => `
+                    <div class="seats-grid" style="margin-bottom: 0.5rem;">
+                        ${row.seats.map(seat => `
+                            <button
+                                class="seat ${seat.status === 'available' ? '' : 'unavailable'} ${selectedSeats.find(s => s.seatNumber === seat.code) ? 'selected' : ''}"
+                                onclick="toggleSeat('${seat.code}', '${seat.status}')"
+                                ${seat.status !== 'available' ? 'disabled' : ''}
+                            >${seat.code}</button>
+                        `).join('')}
+                    </div>
+                `).join('');
+            } else if (busType === 'sleeper') {
+                const lower = Array.from({ length: 10 }, (_, i) => ({ seatNumber: `L${i + 1}`, isAvailable: Math.random() > 0.3 }));
+                const upper = Array.from({ length: 10 }, (_, i) => ({ seatNumber: `U${i + 1}`, isAvailable: Math.random() > 0.3 }));
+                seatsHtml = `
+                    <h3>Lower Deck</h3>
+                    <div class="seats-grid">
+                        ${lower.map(seat => `
+                            <button
+                                class="seat ${seat.isAvailable ? '' : 'unavailable'} ${selectedSeats.find(s => s.seatNumber === seat.seatNumber) ? 'selected' : ''}"
+                                onclick="toggleSeat('${seat.seatNumber}', ${seat.isAvailable})"
+                                ${!seat.isAvailable ? 'disabled' : ''}
+                            >${seat.seatNumber}</button>
+                        `).join('')}
+                    </div>
+                    <h3>Upper Deck</h3>
+                    <div class="seats-grid">
+                        ${upper.map(seat => `
+                            <button
+                                class="seat ${seat.isAvailable ? '' : 'unavailable'} ${selectedSeats.find(s => s.seatNumber === seat.seatNumber) ? 'selected' : ''}"
+                                onclick="toggleSeat('${seat.seatNumber}', ${seat.isAvailable})"
+                                ${!seat.isAvailable ? 'disabled' : ''}
+                            >${seat.seatNumber}</button>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                const seats = Array.from({ length: 20 }, (_, i) => ({ seatNumber: `${i + 1}`, isAvailable: Math.random() > 0.3 }));
+                seatsHtml = `
+                    <div class="seats-grid">
+                        ${seats.map(seat => `
+                            <button
+                                class="seat ${seat.isAvailable ? '' : 'unavailable'} ${selectedSeats.find(s => s.seatNumber === seat.seatNumber) ? 'selected' : ''}"
+                                onclick="toggleSeat('${seat.seatNumber}', ${seat.isAvailable})"
+                                ${!seat.isAvailable ? 'disabled' : ''}
+                            >${seat.seatNumber}</button>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            content.innerHTML = `
+                <h2>${bus.busName} - ${busType}</h2>
+                <div class="seat-layout">
+                    ${seatsHtml}
+                </div>
+                ${selectedSeats.length > 0 ? `
+                    <div class="passenger-form">
+                        <h3>Passenger Details</h3>
+                        ${passengers.map((passenger, idx) => `
+                            <div class="passenger-card">
+                                <h4>Seat: ${passenger.seatNumber}</h4>
+                                <input
+                                    type="text"
+                                    placeholder="Name"
+                                    value="${passenger.name}"
+                                    onchange="updatePassenger('${passenger.seatNumber}', 'name', this.value)"
+                                />
+                                <input
+                                    type="number"
+                                    placeholder="Age"
+                                    value="${passenger.age}"
+                                    onchange="updatePassenger('${passenger.seatNumber}', 'age', this.value)"
+                                />
+                                <select onchange="updatePassenger('${passenger.seatNumber}', 'gender', this.value)">
+                                    <option value="male" ${passenger.gender === 'male' ? 'selected' : ''}>Male</option>
+                                    <option value="female" ${passenger.gender === 'female' ? 'selected' : ''}>Female</option>
+                                    <option value="other" ${passenger.gender === 'other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                        `).join('')}
+                        <div class="seat-summary">
+                            <p>Selected Seats: ${selectedSeats.length}</p>
+                            <p>Price per seat: ₹${bus.price || 500}</p>
+                            <p class="total">Total: ₹${selectedSeats.length * (bus.price || 500)}</p>
+                        </div>
+                        <button class="btn-primary" onclick="proceedToBooking()" style="width: 100%; margin-top: 1rem;">
+                            Proceed to Payment
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function toggleSeat(seatNumber, seatStatus) {
+            const isAvailable = seatStatus === 'available';
+            if (!isAvailable) return;
+
+            const isSelected = selectedSeats.find(s => s.seatNumber === seatNumber);
+
+            if (isSelected) {
+                selectedSeats = selectedSeats.filter(s => s.seatNumber !== seatNumber);
+                passengers = passengers.filter(p => p.seatNumber !== seatNumber);
+            } else {
+                selectedSeats.push({ seatNumber, isAvailable: true });
+                passengers.push({
+                    seatNumber,
+                    name: '',
+                    age: '',
+                    gender: 'male'
+                });
+            }
+
+            const content = document.getElementById('seatSelectionContent');
+            const busName = content.querySelector('h2')?.textContent || 'Bus';
+            const busType = content.querySelector('h2')?.textContent.split(' - ')[1] || 'seater';
+            const priceText = content.querySelector('.seat-summary .total')?.textContent || '₹500';
+            const priceMatch = priceText.match(/₹(\d+)/);
+            const price = priceMatch ? parseInt(priceMatch[1]) : 500;
+
+            const currentBus = {
+                _id: selectedBus._id,
+                busName,
+                busType,
+                price
+            };
+
+            renderSeatSelection(currentBus);
+        }
+
+        function updatePassenger(seatNumber, field, value) {
+            passengers = passengers.map(p =>
+                p.seatNumber === seatNumber ? { ...p, [field]: value } : p
+            );
+        }
+
+        async function proceedToBooking() {
+            const allFilled = passengers.every(p => p.name && p.age);
+            if (!allFilled) {
+                alert('Please fill all passenger details');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_BASE}/booking/booking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: 'guest',
+                        tripId: selectedBus._id,
+                        seats: selectedSeats.map(s => ({ seatNumber: s.seatNumber, gender: passengers.find(p => p.seatNumber === s.seatNumber)?.gender })),
+                        passengers,
+                        totalAmount: selectedSeats.length * 500
+                    })
+                });
+
+                if (!res.ok) throw new Error('Booking failed');
+                const booking = await res.json();
+                closeSeatSelection();
+                showTicket(booking.bookingId);
+            } catch (err) {
+                alert('Booking failed: ' + err.message);
+            }
+        }
+
+        async function bookNow(tripId) {
+            const passengers = [{
+                name: prompt('Enter passenger name') || 'John Doe',
+                age: parseInt(prompt('Enter age') || '25'),
+                gender: prompt('Enter gender (male/female/other)') || 'male'
+            }];
+
+            try {
+                const res = await fetch(`${API_BASE}/booking/booking`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: 'guest',
+                        tripId,
+                        seats: [{ seatNumber: 'L1' }],
+                        passengers,
+                        totalAmount: 500
+                    })
+                });
+
+                if (!res.ok) throw new Error('Booking failed');
+                const booking = await res.json();
+                showTicket(booking.bookingId);
+            } catch (err) {
+                alert('Booking failed: ' + err.message);
+            }
+        }
+
+        async function showTicket(bookingId) {
+            const busesList = document.getElementById('buses-list');
+            const resultsHeader = document.querySelector('.results-header');
+
+            try {
+                const res = await fetch(`${API_BASE}/booking/ticket/${bookingId}`);
+                if (!res.ok) throw new Error('Failed to fetch ticket');
+                const ticket = await res.json();
+
+                resultsHeader.innerHTML = '<h2>Your E-Ticket</h2>';
+
+                const departure = new Date(ticket.tripId.departureTime);
+                const arrival = new Date(ticket.tripId.arrivalTime);
+
+                busesList.innerHTML = `
+                    <div class="ticket-card">
+                        <div class="ticket-header">
+                            <h2>🎫 E-Ticket</h2>
+                            <p>Booking ID: ${ticket.bookingId}</p>
+                        </div>
+                        <div class="ticket-body">
+                            <div class="ticket-route">
+                                <span>${ticket.tripId.routeId.source}</span>
+                                <span class="arrow">→</span>
+                                <span>${ticket.tripId.routeId.destination}</span>
+                            </div>
+                            <div class="ticket-info">
+                                <div class="ticket-info-row">
+                                    <span class="ticket-info-label">Bus</span>
+                                    <span class="ticket-info-value">${ticket.tripId.busId.busName}</span>
+                                </div>
+                                <div class="ticket-info-row">
+                                    <span class="ticket-info-label">Departure</span>
+                                    <span class="ticket-info-value">${departure.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div class="ticket-info-row">
+                                    <span class="ticket-info-label">Arrival</span>
+                                    <span class="ticket-info-value">${arrival.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div class="ticket-info-row">
+                                    <span class="ticket-info-label">Passenger</span>
+                                    <span class="ticket-info-value">${ticket.passengers?.[0]?.name || 'N/A'}</span>
+                                </div>
+                                <div class="ticket-info-row">
+                                    <span class="ticket-info-label">Seat</span>
+                                    <span class="ticket-info-value">${ticket.seats?.[0]?.seatNumber || 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div class="ticket-qr">
+                                <img src="${ticket.qrCode}" alt="QR Code" />
+                                <div class="ticket-amount">₹${ticket.finalAmount}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                alert('Failed to load ticket: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>

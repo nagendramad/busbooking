@@ -1302,7 +1302,10 @@
 
             if (type === 'login') {
                 content.innerHTML = `
-                    <h2>Login</h2>
+                    <div style="background: var(--primary-light); padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                        <h3 style="color: var(--primary); margin: 0;">Welcome Back!</h3>
+                        <p style="margin: 0.5rem 0 0; color: var(--gray-700); font-size: 0.95rem;">Login to your account</p>
+                    </div>
                     <div id="loginForm">
                         <p class="otp-info">Enter your mobile number to receive OTP</p>
                         <input type="tel" id="loginPhone" placeholder="Mobile Number" required />
@@ -1314,13 +1317,17 @@
                         <button class="btn-primary" onclick="verifyLoginOtp()" id="loginVerifyBtn">Verify OTP</button>
                         <button class="secondary-btn" onclick="showLoginStep(1)">Change Number</button>
                     </div>
+                    <p id="loginError" style="display: none; text-align: center; margin-top: 1rem; color: var(--danger); font-weight: 600;"></p>
                     <p style="text-align: center; margin-top: 1rem; color: var(--gray-600);">
-                        Don't have an account? <a href="/register" onclick="event.preventDefault(); openAuth('register');">Register</a>
+                        Don't have an account? <a href="javascript:void(0)" onclick="openAuth('register')" style="color: var(--primary); font-weight: 600;">Register here</a>
                     </p>
                 `;
             } else {
                 content.innerHTML = `
-                    <h2>Register</h2>
+                    <div style="background: #d1fae5; padding: 1rem; border-radius: 10px; margin-bottom: 1rem; text-align: center;">
+                        <h3 style="color: var(--secondary-dark); margin: 0;">Create Account</h3>
+                        <p style="margin: 0.5rem 0 0; color: var(--gray-700); font-size: 0.95rem;">Register with your mobile number</p>
+                    </div>
                     <div id="registerForm">
                         <input type="text" id="regName" placeholder="Full Name" required />
                         <input type="tel" id="regPhone" placeholder="Mobile Number" required />
@@ -1332,8 +1339,9 @@
                         <button class="btn-primary" onclick="verifyRegisterOtp()" id="regVerifyBtn">Verify OTP</button>
                         <button class="secondary-btn" onclick="showRegisterStep(1)">Change Number</button>
                     </div>
+                    <p id="registerError" style="display: none; text-align: center; margin-top: 1rem; color: var(--danger); font-weight: 600;"></p>
                     <p style="text-align: center; margin-top: 1rem; color: var(--gray-600);">
-                        Already have an account? <a href="/login" onclick="event.preventDefault(); openAuth('login');">Login</a>
+                        Already have an account? <a href="javascript:void(0)" onclick="openAuth('login')" style="color: var(--primary); font-weight: 600;">Login here</a>
                     </p>
                 `;
             }
@@ -1356,6 +1364,9 @@
         async function sendLoginOtp() {
             const phone = document.getElementById('loginPhone').value;
             const btn = document.getElementById('loginSendBtn');
+            const errorEl = document.getElementById('loginError');
+            errorEl.style.display = 'none';
+
             btn.disabled = true;
             btn.textContent = 'Sending...';
 
@@ -1368,7 +1379,12 @@
 
                 const data = await res.json();
                 if (!res.ok) {
-                    alert(data.message || 'Failed to send OTP');
+                    if (res.status === 404) {
+                        errorEl.innerHTML = 'This mobile number is not registered. <a href="javascript:void(0)" onclick="openAuth(\'register\')" style="color: var(--primary); font-weight: 700;">Register here</a>';
+                    } else {
+                        errorEl.textContent = data.message || 'Failed to send OTP';
+                    }
+                    errorEl.style.display = 'block';
                     btn.disabled = false;
                     btn.textContent = 'Send OTP';
                     return;
@@ -1377,7 +1393,8 @@
                 document.getElementById('loginPhoneDisplay').textContent = phone;
                 showLoginStep(2);
             } catch (err) {
-                alert('Something went wrong. Please try again.');
+                errorEl.textContent = 'Something went wrong. Please try again.';
+                errorEl.style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = 'Send OTP';
             }
@@ -1387,6 +1404,9 @@
             const phone = document.getElementById('loginPhone').value;
             const otp = document.getElementById('loginOtp').value;
             const btn = document.getElementById('loginVerifyBtn');
+            const errorEl = document.getElementById('loginError');
+            errorEl.style.display = 'none';
+
             btn.disabled = true;
             btn.textContent = 'Verifying...';
 
@@ -1399,7 +1419,8 @@
 
                 const data = await res.json();
                 if (!res.ok) {
-                    alert(data.message || 'Invalid OTP');
+                    errorEl.textContent = data.message || 'Invalid OTP';
+                    errorEl.style.display = 'block';
                     btn.disabled = false;
                     btn.textContent = 'Verify OTP';
                     return;
@@ -1410,7 +1431,8 @@
                 closeAuth();
                 window.location.reload();
             } catch (err) {
-                alert('Something went wrong. Please try again.');
+                errorEl.textContent = 'Something went wrong. Please try again.';
+                errorEl.style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = 'Verify OTP';
             }
@@ -1420,6 +1442,9 @@
             const name = document.getElementById('regName').value;
             const phone = document.getElementById('regPhone').value;
             const btn = document.getElementById('regSendBtn');
+            const errorEl = document.getElementById('registerError');
+            errorEl.style.display = 'none';
+
             btn.disabled = true;
             btn.textContent = 'Sending...';
 
@@ -1432,7 +1457,8 @@
 
                 const data = await res.json();
                 if (!res.ok) {
-                    alert(data.message || 'Failed to send OTP');
+                    errorEl.textContent = data.message || 'Failed to send OTP';
+                    errorEl.style.display = 'block';
                     btn.disabled = false;
                     btn.textContent = 'Send OTP';
                     return;
@@ -1441,7 +1467,8 @@
                 document.getElementById('regPhoneDisplay').textContent = phone;
                 showRegisterStep(2);
             } catch (err) {
-                alert('Something went wrong. Please try again.');
+                errorEl.textContent = 'Something went wrong. Please try again.';
+                errorEl.style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = 'Send OTP';
             }
@@ -1452,6 +1479,9 @@
             const phone = document.getElementById('regPhone').value;
             const otp = document.getElementById('regOtp').value;
             const btn = document.getElementById('regVerifyBtn');
+            const errorEl = document.getElementById('registerError');
+            errorEl.style.display = 'none';
+
             btn.disabled = true;
             btn.textContent = 'Verifying...';
 
@@ -1464,7 +1494,8 @@
 
                 const data = await res.json();
                 if (!res.ok) {
-                    alert(data.message || 'Invalid OTP');
+                    errorEl.textContent = data.message || 'Invalid OTP';
+                    errorEl.style.display = 'block';
                     btn.disabled = false;
                     btn.textContent = 'Verify OTP';
                     return;
@@ -1475,7 +1506,8 @@
                 closeAuth();
                 window.location.reload();
             } catch (err) {
-                alert('Something went wrong. Please try again.');
+                errorEl.textContent = 'Something went wrong. Please try again.';
+                errorEl.style.display = 'block';
                 btn.disabled = false;
                 btn.textContent = 'Verify OTP';
             }

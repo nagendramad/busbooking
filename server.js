@@ -441,13 +441,6 @@ operatorRoutes.post('/buses', (req, res) => {
   res.status(201).json(bus);
 });
 
-operatorRoutes.put('/buses/:id', (req, res) => {
-  const index = operatorData.buses.findIndex(b => b._id === req.params.id);
-  if (index === -1) return res.status(404).json({ message: 'Bus not found' });
-  operatorData.buses[index] = { ...operatorData.buses[index], ...req.body };
-  res.json(operatorData.buses[index]);
-});
-
 operatorRoutes.put('/buses/:id/assign-route', (req, res) => {
   const busIndex = operatorData.buses.findIndex(b => b._id === req.params.id);
   if (busIndex === -1) return res.status(404).json({ message: 'Bus not found' });
@@ -455,22 +448,34 @@ operatorRoutes.put('/buses/:id/assign-route', (req, res) => {
   const { routeId, action } = req.body;
   if (!routeId) return res.status(400).json({ message: 'routeId is required' });
 
-  const route = operatorData.routes.find(r => r._id === routeId);
-  if (!route) return res.status(404).json({ message: 'Route not found' });
+  const routeIndex = operatorData.routes.findIndex(r => r._id === routeId);
+  if (routeIndex === -1) return res.status(404).json({ message: 'Route not found' });
 
   const bus = operatorData.buses[busIndex];
   const currentRouteIds = bus.routeIds || [];
 
   if (action === 'remove') {
     operatorData.buses[busIndex].routeIds = currentRouteIds.filter(r => r.routeId !== routeId);
+    operatorData.routes[routeIndex].assignedBusIds = (operatorData.routes[routeIndex].assignedBusIds || []).filter(id => id !== req.params.id);
   } else {
     const alreadyAssigned = currentRouteIds.some(r => r.routeId === routeId);
     if (!alreadyAssigned) {
       operatorData.buses[busIndex].routeIds = [...currentRouteIds, { routeId, assignedAt: new Date() }];
     }
+    if (!operatorData.routes[routeIndex].assignedBusIds) operatorData.routes[routeIndex].assignedBusIds = [];
+    if (!operatorData.routes[routeIndex].assignedBusIds.includes(req.params.id)) {
+      operatorData.routes[routeIndex].assignedBusIds.push(req.params.id);
+    }
   }
 
   res.json(operatorData.buses[busIndex]);
+});
+
+operatorRoutes.put('/buses/:id', (req, res) => {
+  const index = operatorData.buses.findIndex(b => b._id === req.params.id);
+  if (index === -1) return res.status(404).json({ message: 'Bus not found' });
+  operatorData.buses[index] = { ...operatorData.buses[index], ...req.body };
+  res.json(operatorData.buses[index]);
 });
 
 operatorRoutes.delete('/buses/:id', (req, res) => {
@@ -605,11 +610,12 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.PORT || 3008;
+const PORT = process.env.PORT || 3010;
 
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`Smart Travel Bus Booking Server running on port ${PORT}`);
+    console.log('Bus3 initial routeIds:', JSON.stringify(operatorData.buses.find(b => b._id === 'bus3')?.routeIds));
     console.log('Available endpoints:');
     console.log('  GET  /health - Health check');
     console.log('  POST /api/auth/register - User registration');

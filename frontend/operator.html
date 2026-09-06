@@ -696,12 +696,21 @@
 
         async function loadBuses() {
             try {
+                const timestamp = Date.now();
                 const [busesRes, routesRes] = await Promise.all([
-                    fetch(`${API_BASE}/buses`),
-                    fetch(`${API_BASE}/routes`)
+                    fetch(`${API_BASE}/buses?t=${timestamp}`),
+                    fetch(`${API_BASE}/routes?t=${timestamp}`)
                 ]);
 
-                if (!busesRes.ok) throw new Error('Failed to fetch buses');
+                if (!busesRes.ok) {
+                    const text = await busesRes.text();
+                    throw new Error(`Failed to fetch buses: ${busesRes.status} ${text}`);
+                }
+                if (!routesRes.ok) {
+                    const text = await routesRes.text();
+                    throw new Error(`Failed to fetch routes: ${routesRes.status} ${text}`);
+                }
+
                 const buses = await busesRes.json();
                 const routes = await routesRes.json();
 
@@ -728,7 +737,8 @@
                 }).join('');
             } catch (err) {
                 console.error('Failed to load buses:', err);
-                document.getElementById('busesTable').innerHTML = `<tr><td colspan="8" style="color: var(--danger);">Failed to load buses: ${err.message}</td></tr>`;
+                const errorMsg = err.message || 'Unknown error';
+                document.getElementById('busesTable').innerHTML = `<tr><td colspan="8" style="color: var(--danger);">Failed to load buses: ${errorMsg}</td></tr>`;
             }
         }
 

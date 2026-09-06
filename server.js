@@ -42,6 +42,7 @@ const operatorData = {
       amenities: ['AC', 'WIFI', 'Charging'],
       capacity: 40,
       isActive: true,
+      routeIds: [{ routeId: 'route1', assignedAt: new Date() }],
       seatLayout: {
         rows: 10,
         columns: ['L', 'U', 'A'],
@@ -66,6 +67,7 @@ const operatorData = {
       amenities: ['AC', 'Charging'],
       capacity: 36,
       isActive: true,
+      routeIds: [{ routeId: 'route1', assignedAt: new Date() }],
       seatLayout: {
         rows: 12,
         columns: ['L', 'R'],
@@ -92,6 +94,7 @@ const operatorData = {
       amenities: ['AC', 'WIFI', 'Blanket'],
       capacity: 32,
       isActive: true,
+      routeIds: [],
       seatLayout: {
         rows: 8,
         columns: ['L', 'U', 'A'],
@@ -114,6 +117,7 @@ const operatorData = {
       amenities: ['AC'],
       capacity: 44,
       isActive: true,
+      routeIds: [{ routeId: 'route2', assignedAt: new Date() }],
       seatLayout: {
         rows: 11,
         columns: ['L', 'M', 'R'],
@@ -139,6 +143,7 @@ const operatorData = {
       amenities: ['AC', 'Blanket'],
       capacity: 30,
       isActive: true,
+      routeIds: [],
       seatLayout: {
         rows: 10,
         columns: ['L', 'U', 'A'],
@@ -158,11 +163,11 @@ const operatorData = {
     }
   ],
   routes: [
-    { _id: 'route1', source: 'Bangalore', destination: 'Mumbai', distance: 980, estimatedDuration: 12, stops: [{ location: 'Pune', time: '04:00' }] },
-    { _id: 'route2', source: 'Bangalore', destination: 'Chennai', distance: 360, estimatedDuration: 5, stops: [] },
-    { _id: 'route3', source: 'Mumbai', destination: 'Pune', distance: 150, estimatedDuration: 3, stops: [] },
-    { _id: 'route4', source: 'Delhi', destination: 'Jaipur', distance: 280, estimatedDuration: 5, stops: [{ location: 'Gurgaon', time: '01:30' }] },
-    { _id: 'route5', source: 'Hyderabad', destination: 'Bangalore', distance: 570, estimatedDuration: 8, stops: [] }
+    { _id: 'route1', source: 'Bangalore', destination: 'Mumbai', distance: 980, estimatedDuration: 12, stops: [{ location: 'Pune', time: '04:00' }], assignedBusIds: ['bus1', 'bus2'] },
+    { _id: 'route2', source: 'Bangalore', destination: 'Chennai', distance: 360, estimatedDuration: 5, stops: [], assignedBusIds: ['bus4'] },
+    { _id: 'route3', source: 'Mumbai', destination: 'Pune', distance: 150, estimatedDuration: 3, stops: [], assignedBusIds: [] },
+    { _id: 'route4', source: 'Delhi', destination: 'Jaipur', distance: 280, estimatedDuration: 5, stops: [{ location: 'Gurgaon', time: '01:30' }], assignedBusIds: [] },
+    { _id: 'route5', source: 'Hyderabad', destination: 'Bangalore', distance: 570, estimatedDuration: 8, stops: [], assignedBusIds: [] }
   ],
   trips: [
     { _id: 'trip1', busId: 'bus1', routeId: 'route1', departureTime: new Date(Date.now() + 86400000).setHours(6, 0, 0, 0), arrivalTime: new Date(Date.now() + 86400000).setHours(18, 0, 0, 0), price: 500, availableSeats: 20, tripStatus: 'scheduled', days: ['Monday', 'Wednesday', 'Friday', 'Sunday'] },
@@ -443,6 +448,31 @@ operatorRoutes.put('/buses/:id', (req, res) => {
   res.json(operatorData.buses[index]);
 });
 
+operatorRoutes.put('/buses/:id/assign-route', (req, res) => {
+  const busIndex = operatorData.buses.findIndex(b => b._id === req.params.id);
+  if (busIndex === -1) return res.status(404).json({ message: 'Bus not found' });
+
+  const { routeId, action } = req.body;
+  if (!routeId) return res.status(400).json({ message: 'routeId is required' });
+
+  const route = operatorData.routes.find(r => r._id === routeId);
+  if (!route) return res.status(404).json({ message: 'Route not found' });
+
+  const bus = operatorData.buses[busIndex];
+  const currentRouteIds = bus.routeIds || [];
+
+  if (action === 'remove') {
+    operatorData.buses[busIndex].routeIds = currentRouteIds.filter(r => r.routeId !== routeId);
+  } else {
+    const alreadyAssigned = currentRouteIds.some(r => r.routeId === routeId);
+    if (!alreadyAssigned) {
+      operatorData.buses[busIndex].routeIds = [...currentRouteIds, { routeId, assignedAt: new Date() }];
+    }
+  }
+
+  res.json(operatorData.buses[busIndex]);
+});
+
 operatorRoutes.delete('/buses/:id', (req, res) => {
   const index = operatorData.buses.findIndex(b => b._id === req.params.id);
   if (index === -1) return res.status(404).json({ message: 'Bus not found' });
@@ -500,6 +530,11 @@ operatorRoutes.post('/trips', (req, res) => {
 
     const route = operatorData.routes.find(r => r._id === routeId);
     if (!route) return res.status(404).json({ message: 'Route not found' });
+
+    const busRouteIds = (bus.routeIds || []).map(r => r.routeId);
+    if (!busRouteIds.includes(routeId)) {
+      return res.status(400).json({ message: 'Bus is not assigned to this route. Please assign the bus to the route first.' });
+    }
 
     const departure = new Date(departureTime);
     const arrival = new Date(arrivalTime);
